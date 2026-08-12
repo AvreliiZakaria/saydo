@@ -1,3 +1,14 @@
 {
-  "expo": { "name": "SAY/DO", "slug": "saydo", "version": "0.1.0", "orientation": "portrait", "userInterfaceStyle": "light", "scheme": "saydo", "ios": { "supportsTablet": true }, "android": { "package": "com.saydo.app" }, "web": { "bundler": "metro" } }
+  "expo": {
+    "name": "SAY/DO",
+    "slug": "saydo",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "scheme": "saydo",
+    "plugins": ["expo-notifications", "expo-image-picker"],
+    "ios": { "supportsTablet": true, "infoPlist": { "NSUserNotificationUsageDescription": "SAY/DO напоминает о твоих активных обещаниях." } },
+    "android": { "package": "com.saydo.app", "permissions": ["POST_NOTIFICATIONS"] },
+    "web": { "bundler": "metro" }
+  }
 }
