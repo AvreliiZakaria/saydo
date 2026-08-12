@@ -24,8 +24,15 @@ export async function getWitnessRequests(userId: string): Promise<WitnessRequest
   return (data ?? []) as WitnessRequest[];
 }
 
+export async function submitWitnessCompletion(id: string): Promise<void> {
+  if (!supabase) throw new Error('Supabase is not configured');
+  const { error } = await supabase.from('saydo_witness_requests').update({ submitted_at: new Date().toISOString() }).eq('id', id).eq('requester_id', (await supabase.auth.getUser()).data.user?.id ?? '');
+  if (error) throw error;
+}
+
 export async function decideWitnessRequest(id: string, status: 'confirmed' | 'rejected'): Promise<void> {
   if (!supabase) throw new Error('Supabase is not configured');
-  const { error } = await supabase.from('saydo_witness_requests').update({ status, decided_at: new Date().toISOString() }).eq('id', id);
+  const userId = (await supabase.auth.getUser()).data.user?.id;
+  const { error } = await supabase.from('saydo_witness_requests').update({ status, decided_at: new Date().toISOString() }).eq('id', id).eq('witness_id', userId ?? '');
   if (error) throw error;
 }
