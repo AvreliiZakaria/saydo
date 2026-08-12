@@ -19,7 +19,8 @@ function toRow(userId: string, commitment: Commitment) {
     status: commitment.status,
     locked_at: commitment.lockedAt ?? null,
     completed_at: commitment.completedAt ?? null,
-    result: commitment.status === 'completed' ? 'success' : commitment.status === 'missed' ? 'missed' : commitment.status === 'abandoned' ? 'abandoned' : null,
+    result: commitment.result ?? null,
+    updated_at: new Date().toISOString(),
   };
 }
 
@@ -31,6 +32,7 @@ function fromRow(row: Record<string, unknown>): Commitment {
     proof: row.proof_type as Commitment['proof'],
     visibility: row.visibility as Commitment['visibility'],
     status: row.status as Commitment['status'],
+    result: row.result ? (row.result as Commitment['result']) : undefined,
     createdAt: String(row.created_at),
     lockedAt: row.locked_at ? String(row.locked_at) : undefined,
     completedAt: row.completed_at ? String(row.completed_at) : undefined,
@@ -47,7 +49,7 @@ export class SupabaseBackend implements SayDoBackend {
 
   async saveCommitment(userId: string, commitment: Commitment): Promise<void> {
     if (!supabase) return;
-    const { error } = await supabase.from('saydo_commitments').upsert(toRow(userId, commitment));
+    const { error } = await supabase.from('saydo_commitments').upsert(toRow(userId, commitment), { onConflict: 'id' });
     if (error) throw error;
   }
 
