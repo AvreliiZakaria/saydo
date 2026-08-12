@@ -4,7 +4,7 @@
 
 1. Use Node.js 20.19 or newer.
 2. Pull the latest repository changes.
-3. Copy `.env.example` to `.env` and paste the Supabase publishable key.
+3. Confirm `.env` contains the Supabase URL and publishable key.
 4. Delete `node_modules` and `package-lock.json` once after dependency changes.
 5. Run `npm install`.
 6. Run `npx expo install --fix`.
@@ -12,19 +12,17 @@
 8. Run `npx expo start --clear`.
 9. Open the QR code in the current Expo Go on the physical iPhone.
 
-## Current backend status
+## Account lifecycle
 
-- Supabase Auth email sign-in/sign-up gate: committed and wired as the app entry.
-- Commitment schema and RLS: executed in project `rfsailrgxqpaokmdgpjm`.
-- Private proof bucket and storage policies: executed.
-- Deadline resolution service: committed, UI wiring pending.
-- Photo upload service: committed, camera/picker UI pending.
-- Remote commitment sync: adapter exists, UI wiring pending.
-- Push notifications: not implemented yet.
-- Witness requests: schema exists, UI and invite/search flow pending.
+- On startup the app validates the cached Supabase session with `auth.getUser()`.
+- If the account was deleted in Supabase, the cached session and local commitments are cleared.
+- Authenticated users can sign out from the top account bar.
+- Authenticated users can permanently delete the account from the top account bar. The `delete-account` Edge Function performs the privileged deletion server-side.
+- Local commitments are cleared on logout so a second user on the same phone cannot see the previous user's data.
 
 ## Verification
 
-Runtime build, npm install, Expo doctor, auth flow, and physical iPhone testing are NOT EXECUTED in this environment.
+Supabase schema and `delete-account` Edge Function: EXECUTED.
+Runtime build, npm install, Expo doctor, auth flow, and physical iPhone testing: NOT EXECUTED in this environment.
 
 Never put a Supabase secret/service key in the app. Only the project URL and publishable key belong in `.env`.
