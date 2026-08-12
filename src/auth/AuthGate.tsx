@@ -1,15 +1,13 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { deleteAccount, signInWithEmail, signUpWithEmail, signOut } from './session';
+import { clearLocal } from '../sync/commitments';
 import { supabase } from '../backend/supabase';
 
-const COMMITMENTS_KEY = '@saydo/commitments/v1';
 export function AuthGate({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true); const [submitting, setSubmitting] = useState(false); const [userId, setUserId] = useState<string | null>(null); const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); const [mode, setMode] = useState<'signIn' | 'signUp'>('signIn'); const [error, setError] = useState(''); const passwordRef = useRef<TextInput>(null);
-  async function clearLocalAccountData() { await AsyncStorage.removeItem(COMMITMENTS_KEY); }
-  async function logout() { await signOut(); await clearLocalAccountData(); }
-  function confirmDelete() { Alert.alert('Удалить аккаунт?', 'Все обещания, счёт и профиль будут удалены без возможности восстановления.', [{ text: 'Отмена', style: 'cancel' }, { text: 'Удалить', style: 'destructive', onPress: async () => { try { await deleteAccount(); await clearLocalAccountData(); } catch { Alert.alert('Не удалось удалить аккаунт', 'Ничего не удалено. Проверь интернет и попробуй ещё раз.'); } } }]); }
+  async function logout() { await signOut(); await clearLocal(); }
+  function confirmDelete() { Alert.alert('Удалить аккаунт?', 'Все обещания, счёт и профиль будут удалены без возможности восстановления.', [{ text: 'Отмена', style: 'cancel' }, { text: 'Удалить', style: 'destructive', onPress: async () => { try { await deleteAccount(); await clearLocal(); } catch { Alert.alert('Не удалось удалить аккаунт', 'Ничего не удалено. Проверь интернет и попробуй ещё раз.'); } } }]); }
   useEffect(() => { let active = true; async function hydrate() { if (!supabase) { setLoading(false); return; } const { data } = await supabase.auth.getSession(); if (!data.session) { if (active) setLoading(false); return; } const { data: userData, error: userError } = await supabase.auth.getUser(); if (userError || !userData.user) { await logout(); if (active) { setUserId(null); setLoading(false); } return; } if (active) { setUserId(userData.user.id); setLoading(false); } } hydrate(); if (!supabase) return; const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => { if (active) setUserId(session?.user.id ?? null); }); return () => { active = false; listener.subscription.unsubscribe(); }; }, []);
   if (loading) return <View style={styles.center}><ActivityIndicator color={colors.accent} /></View>;
   if (userId) return <View style={styles.flex}><View style={styles.accountBar}><Text style={styles.accountText}>SAY/DO</Text><View style={styles.accountActions}><Pressable onPress={logout}><Text style={styles.accountLink}>Выйти</Text></Pressable><Pressable onPress={confirmDelete}><Text style={styles.deleteLink}>Удалить</Text></Pressable></View></View>{children}</View>;
