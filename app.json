@@ -1,0 +1,3 @@
+{
+  "expo": { "name": "SAY/DO", "slug": "saydo", "version": "0.1.0", "orientation": "portrait", "userInterfaceStyle": "light", "scheme": "saydo", "ios": { "supportsTablet": true }, "android": { "package": "com.saydo.app" }, "web": { "bundler": "metro" } }
+}
