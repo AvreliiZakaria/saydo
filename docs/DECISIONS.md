@@ -1,17 +1,34 @@
 # Decisions
 
-## 2026-08-12: Local-first foundation
+## Promise ids are UUID v4, generated on the client
 
-The app stores promises locally with AsyncStorage before authentication and remote sync exist. This keeps the core promise loop usable without secrets or a backend account.
+`saydo_commitments.id` is a Postgres `uuid`. Client-generated ids let the app create promises
+offline and upsert them later without a round trip. `src/domain/ids.ts` uses the platform
+CSPRNG when Hermes exposes one and falls back to `Math.random`; these ids are database keys,
+not secrets, so the fallback is acceptable and avoids a native dependency.
 
-## 2026-08-12: Supabase backend
+## Outcome lives in `result`, not in `status`
 
-Supabase project `rfsailrgxqpaokmdgpjm` now contains `saydo_commitments`, `saydo_witness_requests`, and `saydo_proofs`. Row Level Security restricts commitment and proof rows to their owner; witness requests are restricted to requester and witness. The app uses only the publishable key, never a service key.
+The spec requires archiving to never change the score. If the score were derived from `status`,
+archiving a completed promise would erase the success. `result` (`success` / `missed` /
+`abandoned`) is written once when a promise resolves and is never cleared, so `status` stays
+free to move to `archived` for presentation. This mirrors the existing `result` column in
+Postgres.
 
-## 2026-08-12: Keyboard behavior
+## Sync is last-write-wins, per promise
 
-Promise creation uses `KeyboardAvoidingView`, keyboard-aware scrolling, and a focused input ref so the field and action buttons remain visible on iPhone.
+`saveForUser` pushes only promises whose serialized form changed since the last successful
+upload. There is no conflict resolution: editing the same promise on two devices means the
+last write wins. Acceptable for a single-device MVP, revisit before multi-device launch.
 
-## 2026-08-12: Sync boundary
+## Deadlines are re-checked on a 30s timer
 
-`SupabaseBackend` is implemented but authentication is intentionally not faked. Until a user signs in, local storage remains the source of truth. Auth and conflict-safe sync are the next phase.
+Previously expiry was only evaluated when the promise list happened to change, so an open app
+could show an active promise hours past its deadline. `resolveExpiredCommitments` returns the
+original array reference when nothing changed, so the timer does not cause re-renders.
+
+## Tests cover the domain only
+
+`jest-expo` is wired up, but tests are limited to pure domain logic (state machine, score,
+deadline resolution). Component and integration tests need `@testing-library/react-native`
+and are not set up yet.
