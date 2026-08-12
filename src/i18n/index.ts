@@ -5,5 +5,5 @@ export const translations = {
   en: { today: 'Today', score: 'Score', people: 'People', profile: 'Profile', sayDo: 'SAY/DO', headline: 'Say it. Do it.', emptyTitle: 'Nothing to prove yet.', emptyText: 'Make one concrete promise to yourself.', say: 'SAY IT', lock: 'LOCK PROMISE' },
 } as const;
 
-export type Copy = typeof translations.ru;
+export type Copy = (typeof translations)[Locale];
 export function getCopy(locale: Locale = 'ru'): Copy { return translations[locale]; }
