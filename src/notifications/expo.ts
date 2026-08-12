@@ -1,7 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import { Commitment } from '../domain/commitment';
-import { NotificationStatus, ReminderService } from './index';
+import type { NotificationStatus, ReminderService } from './index';
 
 Notifications.setNotificationHandler({ handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: false, shouldSetBadge: false }) });
 
@@ -9,7 +9,7 @@ const notificationIds = new Map<string, string>();
 
 export class ExpoReminderService implements ReminderService {
   async status(): Promise<NotificationStatus> {
-    if (Platform.OS === 'web' || !Platform.isPad && Platform.OS === 'web') return 'unavailable';
+    if (Platform.OS === 'web') return 'unavailable';
     const permissions = await Notifications.getPermissionsAsync();
     return permissions.granted ? 'ready' : 'permission-needed';
   }
