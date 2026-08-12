@@ -1,13 +1,17 @@
-export type NotificationPermission = 'unknown' | 'granted' | 'denied';
+import { Commitment } from '../domain/commitment';
 
-export interface NotificationScheduler {
-  requestPermission(): Promise<NotificationPermission>;
-  scheduleDeadlineReminder(commitmentId: string, deadline: string): Promise<void>;
+export type NotificationStatus = 'unavailable' | 'permission-needed' | 'ready';
+
+export interface ReminderService {
+  status(): Promise<NotificationStatus>;
+  scheduleFor(commitment: Commitment): Promise<void>;
+  cancelFor(commitmentId: string): Promise<void>;
 }
 
-export class LocalNotificationScheduler implements NotificationScheduler {
-  async requestPermission(): Promise<NotificationPermission> { return 'unknown'; }
-  async scheduleDeadlineReminder(): Promise<void> { return; }
+export class NoopReminderService implements ReminderService {
+  async status(): Promise<NotificationStatus> { return 'unavailable'; }
+  async scheduleFor(): Promise<void> { return; }
+  async cancelFor(): Promise<void> { return; }
 }
 
-export const notifications = new LocalNotificationScheduler();
+export const reminders: ReminderService = new NoopReminderService();
