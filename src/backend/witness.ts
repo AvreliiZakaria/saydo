@@ -1,0 +1,31 @@
+import { supabase } from './supabase';
+
+export type WitnessRequest = {
+  id: string;
+  commitment_id: string;
+  requester_id: string;
+  witness_id: string;
+  status: 'pending' | 'confirmed' | 'rejected' | 'cancelled';
+  submitted_at?: string;
+  decided_at?: string;
+  created_at: string;
+};
+
+export async function inviteWitness(email: string, commitmentId: string): Promise<void> {
+  if (!supabase) throw new Error('Supabase is not configured');
+  const { error } = await supabase.functions.invoke('witness-request', { body: { email, commitmentId } });
+  if (error) throw error;
+}
+
+export async function getWitnessRequests(userId: string): Promise<WitnessRequest[]> {
+  if (!supabase) return [];
+  const { data, error } = await supabase.from('saydo_witness_requests').select('*').or(`requester_id.eq.${userId},witness_id.eq.${userId}`).order('created_at', { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as WitnessRequest[];
+}
+
+export async function decideWitnessRequest(id: string, status: 'confirmed' | 'rejected'): Promise<void> {
+  if (!supabase) throw new Error('Supabase is not configured');
+  const { error } = await supabase.from('saydo_witness_requests').update({ status, decided_at: new Date().toISOString() }).eq('id', id);
+  if (error) throw error;
+}
